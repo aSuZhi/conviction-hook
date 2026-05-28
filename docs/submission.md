@@ -17,7 +17,7 @@ Conviction is not a prediction market bolted onto Uniswap. It is a Hook-native e
 | YES Token | See `docs/deployment-addresses.md` |
 | NO Token | See `docs/deployment-addresses.md` |
 | Uniswap v4 Pool/PoolKey | See `docs/deployment-addresses.md` |
-| Frontend URL or local demo URL | Fill during final submission |
+| Frontend URL | https://app-nu-beryl-92.vercel.app |
 | Demo video URL or file | Fill during final submission |
 | Final settlement and claim evidence | See `docs/deployment-addresses.md` final lifecycle rows |
 | Agentic Wallet demo evidence | Not submitted in this evidence package unless a transaction hash is imported through `/agent`; see `docs/agentic-wallet-demo.md` |
