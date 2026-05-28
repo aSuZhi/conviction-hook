@@ -78,6 +78,9 @@ export function DemoJourneyPage({
   const canSettle = canUserSettleDemoMarket({ connected, controllerReady, hasPosition, market: demoMarket });
   const sessionNeedsStart = connected && controllerReady && sessionStatus !== 'loading' && needsNewDemoSession(sessionMarket);
   const sessionActive = connected && isActiveDemoSessionMarket(sessionMarket);
+  const activeSessionHint = zh
+    ? '当前钱包已有一个进行中的个人 Demo 市场。先完成买入和结算，或等市场过期后，才能开启下一轮。公开市场创建入口在 Market Studio。'
+    : 'This wallet already has an active personal demo market. Trade and settle it, or wait until expiry, before starting another round. Public market creation lives in Market Studio.';
   const canClaimWinnings = Boolean(demoPosition && demoPosition.claimable > 0n && !demoPosition.claimed);
   const yesPercent = demoMarket ? Number(demoMarket.yesProbability) / 1e16 : 50;
   const noPercent = demoMarket ? Number(demoMarket.noProbability) / 1e16 : 50;
@@ -342,11 +345,15 @@ export function DemoJourneyPage({
                   ? demoMarket?.resolved || demoMarket?.lifecycle === 'expired' || demoMarket?.voided
                     ? zh ? '开启新一轮体验' : 'Start new round'
                     : zh ? '开启体验市场' : 'Start demo session'
-                  : zh ? '体验市场已就绪' : 'Session ready'}
+                  : zh ? '已有进行中的体验市场' : 'Active session exists'}
           </button>
           <button className="secondary-cta" onClick={() => onNavigate({ kind: 'marketDetail', marketAddress: demoMarketAddress })}>
             {zh ? '打开市场详情' : 'Open market detail'}
           </button>
+          <button className="secondary-cta" onClick={() => onNavigate({ kind: 'studioCreate' })}>
+            {zh ? '创建公开市场' : 'Create public market'}
+          </button>
+          {sessionActive ? <p className="fine-print">{activeSessionHint}</p> : null}
         </div>
       </header>
 

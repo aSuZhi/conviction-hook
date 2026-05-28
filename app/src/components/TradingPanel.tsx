@@ -181,8 +181,8 @@ export function TradingPanel({
         <div className="wallet-balances">
           <strong>{copy.balances}</strong>
           <span>{copy.cUsdc}: {formatTokenAmount(balances.collateral)}</span>
-          <span>{copy.pool0}: {formatTokenAmount(balances.pool0)}</span>
-          <span>{copy.pool1}: {formatTokenAmount(balances.pool1)}</span>
+          <span>{copy.pool0}: {balances.pool0.toString()} units</span>
+          <span>{copy.pool1}: {balances.pool1.toString()} units</span>
           <span>{copy.yesToken}: {formatTokenAmount(balances.yes)}</span>
           <span>{copy.noToken}: {formatTokenAmount(balances.no)}</span>
         </div>
