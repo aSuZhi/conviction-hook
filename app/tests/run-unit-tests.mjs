@@ -55,6 +55,7 @@ const asyncGuards = await import(pathToFileURL(path.join(outDir, 'asyncGuards.mj
 const demoJourney = await import(pathToFileURL(path.join(outDir, 'demoJourney.mjs')));
 const portfolioModule = await import(pathToFileURL(path.join(outDir, 'portfolio.mjs')));
 const dapp = await import(pathToFileURL(path.join(outDir, 'dapp.mjs')));
+const appConfig = await import(pathToFileURL(path.join(outDir, 'config.mjs')));
 
 function market(overrides = {}) {
   return {
@@ -249,6 +250,56 @@ assert.equal(
   );
 }
 
+{
+  const account = '0xf75C00b432179483CF667af7C7eF53EFEe89ef31';
+  const oneToken = 10n ** 18n;
+  const sentTransactions = [];
+  const word = (value) => `0x${value.toString(16).padStart(64, '0')}`;
+  const balancesByToken = new Map([
+    [appConfig.config.collateralToken.toLowerCase(), 10n * oneToken],
+    [appConfig.config.demoPoolCurrency0.toLowerCase(), 98n],
+    [appConfig.config.demoPoolCurrency1.toLowerCase(), 296n],
+  ]);
+  const provider = {
+    request: async (payload) => {
+      if (payload.method === 'eth_call') {
+        const to = String(payload.params[0].to).toLowerCase();
+        const data = String(payload.params[0].data);
+        if (data.startsWith('0x70a08231')) return word(balancesByToken.get(to) ?? 0n);
+        if (data.startsWith('0xdd62ed3e')) return word(0n);
+        return word(0n);
+      }
+      if (payload.method === 'eth_sendTransaction') {
+        sentTransactions.push(payload.params[0]);
+        return '0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+      }
+      if (payload.method === 'eth_getTransactionReceipt') return { status: '0x1', logs: [] };
+      throw new Error(`unexpected method ${payload.method}`);
+    },
+  };
+
+  await dapp.executeTrade(
+    provider,
+    account,
+    {
+      marketAddress: '0x2C26308701C809751B8C22B922531fdf47ED6211',
+      yesTokenAddress: '0x677D7E3866Dcd24Baa63379bCDc1476d364Ee701',
+      noTokenAddress: '0xBbB0ABCB7e7c127458CB0BFe828d61dA8661a03b',
+    },
+    'buy',
+    'yes',
+    oneToken,
+    () => {},
+  );
+
+  assert.equal(sentTransactions.length, 3, 'buy should use the available reverse pool token when token0 is short');
+  assert.equal(
+    sentTransactions[1].to.toLowerCase(),
+    appConfig.config.demoPoolCurrency1.toLowerCase(),
+    'pool-token approval should use token1 when token0 is below the hook swap amount',
+  );
+}
+
 assert.equal(marketAnalytics.isBettableMarket(market(), 1_000), true);
 assert.equal(marketAnalytics.isBettableMarket(market({ paused: true }), 1_000), false);
 assert.equal(marketAnalytics.isBettableMarket(market({ voided: true }), 1_000), false);
@@ -415,6 +466,27 @@ assert.equal(evidence.evidenceStatus({ ...item, txHash: undefined }), 'Needs tra
     outcome: 'yes',
   });
   assert.equal(ready.ready, true);
+
+  const reversePoolReady = tradeReadiness.getTradeReadiness({
+    connected: true,
+    market: market({ lifecycle: 'bettable' }),
+    amount: 100n,
+    balances: { collateral: 200n, pool0: 98n, pool1: 296n, yes: 0n, no: 0n },
+    mode: 'buy',
+    outcome: 'yes',
+  });
+  assert.equal(reversePoolReady.ready, true);
+
+  const missingPoolToken = tradeReadiness.getTradeReadiness({
+    connected: true,
+    market: market({ lifecycle: 'bettable' }),
+    amount: 100n,
+    balances: { collateral: 200n, pool0: 98n, pool1: 99n, yes: 0n, no: 0n },
+    mode: 'buy',
+    outcome: 'yes',
+  });
+  assert.equal(missingPoolToken.ready, false);
+  assert.equal(missingPoolToken.reasons[0].code, 'POOL_TOKEN_MISSING');
 
   const expired = tradeReadiness.getTradeReadiness({
     connected: true,

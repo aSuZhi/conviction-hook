@@ -1,4 +1,4 @@
-import type { Balances, Outcome, TradeMode } from './dapp';
+import { POOL_SWAP_AMOUNT, type Balances, type Outcome, type TradeMode } from './dapp';
 import type { MarketSummary } from './marketData';
 
 export type ReadinessReasonCode =
@@ -41,8 +41,8 @@ export function getTradeReadiness(input: {
     if (outcomeBalance < input.amount) reasons.push({ code: 'INSUFFICIENT_OUTCOME', label: 'Insufficient outcome tokens' });
   }
 
-  if (input.balances && input.balances.pool0 === 0n && input.balances.pool1 === 0n) {
-    reasons.push({ code: 'POOL_TOKEN_MISSING', label: 'Pool swap token missing' });
+  if (input.balances && input.balances.pool0 < POOL_SWAP_AMOUNT && input.balances.pool1 < POOL_SWAP_AMOUNT) {
+    reasons.push({ code: 'POOL_TOKEN_MISSING', label: `Need at least ${POOL_SWAP_AMOUNT.toString()} units of either pool token` });
   }
 
   return { ready: reasons.length === 0, reasons };

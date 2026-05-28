@@ -36,7 +36,7 @@ const MINT_POOL_TOKENS_SELECTOR = '0xaaf64a8e';
 
 const MIN_SQRT_PRICE_PLUS_ONE = 4_295_128_740n;
 const MAX_SQRT_PRICE_MINUS_ONE = 1_461_446_703_485_210_103_287_273_052_203_988_822_378_723_970_341n;
-const POOL_SWAP_AMOUNT = 100n;
+export const POOL_SWAP_AMOUNT = 100n;
 
 const POOL_MANAGER_SWAP_TOPIC = '0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f';
 const HOOK_SWAP_OBSERVED_TOPIC = '0x9dff64abf697a4ba63fad8c5860123e8f64ec30c10898047e7db9ff48cde9b43';
@@ -102,13 +102,12 @@ export async function executeTrade(
 
   onPhase('checking');
   const balances = await readBalances(provider, account, tradeTarget);
-  const poolToken = mode === 'buy' ? config.demoPoolCurrency0! : config.demoPoolCurrency1!;
-  const poolBalance = mode === 'buy' ? balances.pool0 : balances.pool1;
+  const poolSide = selectPoolSwapSide(balances);
   const outcomeBalance = outcome === 'yes' ? balances.yes : balances.no;
 
   if (mode === 'buy' && balances.collateral < amount) throw new DappError('INSUFFICIENT_COLLATERAL');
   if (mode === 'sell' && outcomeBalance < amount) throw new DappError('INSUFFICIENT_OUTCOME');
-  if (poolBalance < POOL_SWAP_AMOUNT) throw new DappError('INSUFFICIENT_POOL_TOKEN');
+  if (!poolSide) throw new DappError('INSUFFICIENT_POOL_TOKEN');
 
   if (mode === 'buy') {
     const collateralAllowance = await readAllowance(provider, config.collateralToken!, account, config.routerAddress!);
@@ -118,17 +117,17 @@ export async function executeTrade(
     }
   }
 
-  const poolAllowance = await readAllowance(provider, poolToken, account, config.routerAddress!);
+  const poolAllowance = await readAllowance(provider, poolSide.token, account, config.routerAddress!);
   if (poolAllowance < POOL_SWAP_AMOUNT) {
     onPhase('approvingPoolToken');
-    await approveExact(provider, account, poolToken, config.routerAddress!, POOL_SWAP_AMOUNT);
+    await approveExact(provider, account, poolSide.token, config.routerAddress!, POOL_SWAP_AMOUNT);
   }
 
   onPhase('submitting');
   const data =
     mode === 'buy'
-      ? encodeEnterMarket(tradeTarget.marketAddress, outcome, amount)
-      : encodeExitMarket(tradeTarget.marketAddress, outcome, amount);
+      ? encodeEnterMarket(tradeTarget.marketAddress, outcome, amount, poolSide.zeroForOne)
+      : encodeExitMarket(tradeTarget.marketAddress, outcome, amount, poolSide.zeroForOne);
   return sendAndWait(provider, account, config.routerAddress!, data, tradeTarget.marketAddress);
 }
 
@@ -190,12 +189,26 @@ async function waitForReceipt(provider: EthereumProvider, hash: `0x${string}`) {
   }
 }
 
-function encodeEnterMarket(marketAddress: `0x${string}`, outcome: Outcome, amount: bigint) {
-  return ENTER_SELECTOR + encodeRouterArgs(marketAddress, true, -POOL_SWAP_AMOUNT, MIN_SQRT_PRICE_PLUS_ONE, outcome, amount);
+function selectPoolSwapSide(balances: Balances) {
+  if (balances.pool0 >= POOL_SWAP_AMOUNT) {
+    return { token: config.demoPoolCurrency0!, zeroForOne: true };
+  }
+  if (balances.pool1 >= POOL_SWAP_AMOUNT) {
+    return { token: config.demoPoolCurrency1!, zeroForOne: false };
+  }
+  return null;
 }
 
-function encodeExitMarket(marketAddress: `0x${string}`, outcome: Outcome, amount: bigint) {
-  return EXIT_SELECTOR + encodeRouterArgs(marketAddress, false, -POOL_SWAP_AMOUNT, MAX_SQRT_PRICE_MINUS_ONE, outcome, amount);
+function encodeEnterMarket(marketAddress: `0x${string}`, outcome: Outcome, amount: bigint, zeroForOne: boolean) {
+  return ENTER_SELECTOR + encodeRouterArgs(marketAddress, zeroForOne, -POOL_SWAP_AMOUNT, sqrtLimitFor(zeroForOne), outcome, amount);
+}
+
+function encodeExitMarket(marketAddress: `0x${string}`, outcome: Outcome, amount: bigint, zeroForOne: boolean) {
+  return EXIT_SELECTOR + encodeRouterArgs(marketAddress, zeroForOne, -POOL_SWAP_AMOUNT, sqrtLimitFor(zeroForOne), outcome, amount);
+}
+
+function sqrtLimitFor(zeroForOne: boolean) {
+  return zeroForOne ? MIN_SQRT_PRICE_PLUS_ONE : MAX_SQRT_PRICE_MINUS_ONE;
 }
 
 function encodeRouterArgs(
