@@ -1,0 +1,21 @@
+{
+  "chainName": "X Layer mainnet",
+  "chainId": 196,
+  "rpcUrl": "https://rpc.xlayer.tech",
+  "poolManager": "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
+  "controller": "0x67123f7d2a03dd64397287a14dc5ffa88a89376d",
+  "hook": "0xcfa1e4f193b93b8822837f132828245f0ef314c0",
+  "router": "0x67aadd728b7774a5985e653fa2f4d9661dc5242a",
+  "factory": "0x9441f3e577b3d914e4563a8e5c3a6ca9c4421319",
+  "manager": "0xd9397a0d9872ef7888c221b3758b833c43a656a1",
+  "resolver": "0xcfd6553812c2f489539f62a75a5787fe9b51f8aa",
+  "collateral": "0x381734768da85de012ffec4f296f17d52899e32e",
+  "fallbackMarket": "0x3dA74Bd2319f1E17cA5C977D22960a3d0E13068c",
+  "poolCurrency0": "0x4b9a2e4c384BD45bb224BD3cfd65Af54B121E012",
+  "poolCurrency1": "0x5ff280C26bB357C8d547A26380bfefB0C187f241",
+  "poolFee": 3000,
+  "poolTickSpacing": 60,
+  "yesToken": "0x99A93b24cCcd179173C54B81949a13dfD96FD9ee",
+  "noToken": "0xec8217a862BBBf6a81157F53663EabCAF6073de5",
+  "explorerTxUrl": "https://www.oklink.com/xlayer/tx/"
+}

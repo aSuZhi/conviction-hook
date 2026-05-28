@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Dependencies
+node_modules/
+app/node_modules/
+lib/
+
+# Foundry output
+cache/
+out/
+broadcast/
+deployments/
+
+# Frontend output
+app/dist/
+app/.unit-test-dist/
+
+# Logs and local verification artifacts
+*.log
+*.png
+chrome-*/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,19 @@
+{
+  "name": "conviction",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "forge test",
+    "build": "forge build",
+    "fmt": "forge fmt && pnpm --dir app format",
+    "frontend:dev": "pnpm --dir app dev",
+    "frontend:build": "pnpm --dir app build",
+    "demo": "tsx scripts/demo-lifecycle.ts",
+    "export-abis": "tsx scripts/export-abis.ts"
+  },
+  "devDependencies": {
+    "tsx": "latest",
+    "typescript": "latest",
+    "dotenv": "latest"
+  }
+}
