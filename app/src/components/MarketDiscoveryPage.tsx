@@ -40,8 +40,10 @@ export function MarketDiscoveryPage({
     [positions],
   );
   const visibleMarkets = sortMarkets(filterMarkets(markets, filter, search, ownedMarketAddresses), sort);
-  const initialLoading = loadState === 'loading' && markets.length === 0 && !loadingExpired;
-  const rpcUnavailable = loadState === 'error' || (loadState === 'loading' && markets.length === 0 && loadingExpired);
+  const loadingWithoutMarkets = loadState === 'loading' && markets.length === 0;
+  const initialLoading = loadingWithoutMarkets && !loadingExpired;
+  const slowRpcLoading = loadingWithoutMarkets && loadingExpired;
+  const rpcUnavailable = loadState === 'error';
 
   useEffect(() => {
     if (loadState !== 'loading' || markets.length > 0) {
@@ -67,11 +69,19 @@ export function MarketDiscoveryPage({
         </div>
       </header>
       <MarketFilterBar filter={filter} sort={sort} onFilterChange={setFilter} onSortChange={setSort} />
-      {initialLoading ? <MarketCardSkeletons /> : null}
+      {loadingWithoutMarkets ? <MarketCardSkeletons /> : null}
+      {slowRpcLoading ? (
+        <StatusState
+          title="Still reading X Layer RPC"
+          body="The public RPC is responding slowly. Market data is still loading; retry only if it stays here."
+          actionLabel="Retry"
+          onAction={onRetry}
+        />
+      ) : null}
       {rpcUnavailable ? (
         <StatusState title="RPC error" body="Market data could not be loaded from the configured X Layer RPC." actionLabel="Retry" onAction={onRetry} />
       ) : null}
-      {!initialLoading && !rpcUnavailable && visibleMarkets.length === 0 ? (
+      {!loadingWithoutMarkets && !rpcUnavailable && visibleMarkets.length === 0 ? (
         <StatusState
           title={search ? 'No matching markets' : 'No bettable markets'}
           body={search ? 'Clear the search or change filters.' : 'There are no active markets ready for betting right now.'}

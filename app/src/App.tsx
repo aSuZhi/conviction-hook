@@ -40,7 +40,7 @@ import {
 import type { ActivityItem } from './components/ActivityFeed';
 
 const LOCATION_CHANGE_EVENT = 'conviction:locationchange';
-const MARKET_LOAD_TIMEOUT_MS = 8_000;
+const MARKET_LOAD_TIMEOUT_MS = 15_000;
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>(() => parseRoute());
