@@ -81,18 +81,15 @@ export function encodeOutcome(outcome: DemoOutcome) {
 export function canUserSettleDemoMarket({
   connected,
   controllerReady,
-  hasPosition,
   market,
 }: {
   connected: boolean;
   controllerReady: boolean;
-  hasPosition: boolean;
   market: DemoSettlementGateMarket;
 }) {
   return Boolean(
     connected &&
       controllerReady &&
-      hasPosition &&
       market &&
       !market.resolved &&
       market.lifecycle === 'bettable',

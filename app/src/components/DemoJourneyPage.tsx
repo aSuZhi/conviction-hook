@@ -75,7 +75,7 @@ export function DemoJourneyPage({
   const controllerReady = hasDemoJourneyConfig();
   const canClaim = connected && controllerReady && nextClaimAt <= BigInt(Math.floor(Date.now() / 1000));
   const hasPosition = Boolean(demoPosition && (demoPosition.yesAmount > 0n || demoPosition.noAmount > 0n));
-  const canSettle = canUserSettleDemoMarket({ connected, controllerReady, hasPosition, market: demoMarket });
+  const canSettle = canUserSettleDemoMarket({ connected, controllerReady, market: demoMarket });
   const sessionNeedsStart = connected && controllerReady && sessionStatus !== 'loading' && needsNewDemoSession(sessionMarket);
   const sessionActive = connected && isActiveDemoSessionMarket(sessionMarket);
   const activeSessionHint = zh
@@ -122,10 +122,12 @@ export function DemoJourneyPage({
         label: zh ? '触发结算' : 'Trigger settlement',
         detail: demoMarket?.resolved
           ? (zh ? '市场已结算' : 'Market resolved')
-          : hasPosition
-            ? (zh ? '任选 YES/NO 提交真实 tx' : 'Choose YES or NO and submit tx')
-            : (zh ? '先买入 YES 或 NO 后再结算' : 'Buy YES or NO before settlement'),
-        status: !sessionActive || !controllerReady ? (demoMarket?.resolved ? 'done' : 'locked') : hasPosition ? 'active' : 'locked',
+          : canSettle
+            ? hasPosition
+              ? (zh ? '任选 YES/NO 提交真实 tx' : 'Choose YES or NO and submit tx')
+              : (zh ? '无仓位也可结算，用于开启下一轮' : 'No position needed; settle to unlock a new round')
+            : (zh ? '等待个人市场就绪' : 'Waiting for session market'),
+        status: !sessionActive || !controllerReady ? (demoMarket?.resolved ? 'done' : 'locked') : 'active',
       },
       {
         id: 'claim',
@@ -273,10 +275,6 @@ export function DemoJourneyPage({
     }
     if (!demoMarket || !controllerReady) {
       setError(zh ? 'Demo 市场或 Controller 尚未配置。' : 'Demo market or controller is not configured.');
-      return;
-    }
-    if (!hasPosition) {
-      setError(zh ? '请先买入 YES 或 NO，再触发结算。' : 'Buy YES or NO before triggering settlement.');
       return;
     }
     if (!canSettle) {

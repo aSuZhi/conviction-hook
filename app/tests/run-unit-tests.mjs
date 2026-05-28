@@ -104,27 +104,24 @@ assert.equal(
   demoJourney.canUserSettleDemoMarket({
     connected: true,
     controllerReady: true,
-    hasPosition: false,
-    market: market({ lifecycle: 'bettable' }),
-  }),
-  false,
-  'demo settlement should stay locked until the connected user has a position',
-);
-assert.equal(
-  demoJourney.canUserSettleDemoMarket({
-    connected: true,
-    controllerReady: true,
-    hasPosition: true,
     market: market({ lifecycle: 'bettable' }),
   }),
   true,
-  'demo settlement should unlock after the connected user has a position',
+  'demo settlement should be available for an active session even before the user enters a position',
 );
 assert.equal(
   demoJourney.canUserSettleDemoMarket({
     connected: true,
     controllerReady: true,
-    hasPosition: true,
+    market: market({ lifecycle: 'bettable' }),
+  }),
+  true,
+  'demo settlement should stay available when the connected user has a position',
+);
+assert.equal(
+  demoJourney.canUserSettleDemoMarket({
+    connected: true,
+    controllerReady: true,
     market: market({ lifecycle: 'resolved', resolved: true }),
   }),
   false,
